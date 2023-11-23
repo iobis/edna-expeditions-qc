@@ -1,0 +1,9 @@
+.DS_Store
+storr*
+memoise*
+.Rhistory
+*.Rproj
+*cache
+*.Rproj
+edna-results
+.Rproj.user

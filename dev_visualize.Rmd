@@ -1,0 +1,105 @@
+---
+title: eDNA detections quality control
+output: html_document
+editor_options: 
+  chunk_output_type: console
+knit: (function(inputFile, encoding) {
+  rmarkdown::render(inputFile, encoding = encoding, output_dir = "docs") })
+---
+
+The table below shows the likelihood score of eDNA detections based on WoRMS distributions, species thermal envelopes, and distance to known observations in OBIS and GBIF.
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+library(dplyr)
+library(purrr)
+library(speedy)
+library(stringr)
+library(ggplot2)
+library(sf)
+library(glue)
+library(formattable)
+```
+
+```{r, message=FALSE, warning=FALSE, cache=TRUE, echo=FALSE}
+st_qc <- storr::storr_rds("storr_qc")
+
+# read eDNA results
+
+dna_files <- list.files("edna-results/data", "*DNADerivedData*", full.names = TRUE)
+occurrence_files <- list.files("edna-results/data", "*Occurrence*", full.names = TRUE)
+
+dna <- map(dna_files, read.table, sep = "\t", quote = "", header = TRUE) %>%
+  bind_rows() %>%
+  mutate_if(is.character, na_if, "")
+
+occurrence <- map(occurrence_files, read.table, sep = "\t", quote = "", header = TRUE) %>%
+  bind_rows() %>%
+  mutate_if(is.character, na_if, "") %>%
+  mutate(
+    aphiaid = str_replace(scientificNameID, "urn:lsid:marinespecies.org:taxname:", ""),
+    species = ifelse(taxonRank == "species", scientificName, NA)
+  ) %>%
+  left_join(dna, by = "occurrenceID")
+
+# add qc
+
+max_distance <- 5000
+
+detections <- occurrence %>%
+  filter(!is.na(species) & !is.na(decimalLongitude)) %>%
+  group_by(higherGeography, decimalLongitude, decimalLatitude, species, aphiaid) %>%
+  summarize() %>%
+  ungroup() %>%
+  mutate(key = glue("{aphiaid}_{decimalLongitude}_{decimalLatitude}"))
+
+qc_list <- st_qc$mget(detections$key)
+names(qc_list) <- detections$key
+qc <- bind_rows(qc_list, .id = "key")
+
+detections <- detections %>%
+  left_join(qc, by = "key")
+
+detections <- detections %>%
+  group_by(higherGeography, species) %>%
+  filter(row_number() == 1) %>%
+  rowwise() %>%
+  mutate(distance = round(distance / 1000)) %>%
+  mutate(
+    score = ifelse(
+      worms, 1, ifelse(
+        thermal,
+        max(1 * (max_distance - distance) / max_distance, 0),
+        max(0.5 * (max_distance - distance) / max_distance, 0)
+      )
+    )
+  )
+
+rm("occurrence", "dna", "qc_list", "qc")
+```
+
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
+icon_formatter <- function() {
+  formatter("span", 
+    style = x ~ style(color = ifelse(x, "#a7c400", "#f57842")), x ~ icontext(ifelse(x, "ok", "remove"), "")
+  )	 	 
+}
+
+distant_formatter <- function() {
+  formatter("span", 
+    style = ~ style(color = ifelse(distance > max_distance, "#f57842", "black"))
+  )	 	 
+} 
+
+detections %>%
+  select(site = higherGeography, species, distance, worms, thermal, score) %>%
+  arrange(site, species) %>%
+  formattable(
+    align = rep("l", 6),
+    list(
+      score = color_tile("#f57842", "#ffffff"),
+      distance = distant_formatter(),
+      worms = icon_formatter(),
+      thermal = icon_formatter()
+    )
+  )
+```
