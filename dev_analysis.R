@@ -36,65 +36,69 @@ detections <- occurrence %>%
   ungroup()
 
 check_occurrence <- function(aphiaid, decimalLongitude, decimalLatitude) {
-  # key <- glue("{aphiaid}_{decimalLongitude}_{decimalLatitude}")
-  key <- paste0(aphiaid, "_", decimalLongitude, "_", decimalLatitude)
-  message(key)
-  if (!st_qc$exists(key)) {
-    gc()
-    gc()
-    if (!st$exists(aphiaid)) {
-      dist <- get_dist(aphiaid = as.numeric(aphiaid))
-      st$set(aphiaid, dist)
-    } else {
-      dist <- st$get(aphiaid)
-    }
-    # TODO: cleanup below
-    if (nrow(dist$gbif) == 0) {
-      dist$gbif <- NULL
-    } else {
-      dist$gbif <- st_set_crs(dist$gbif, 4326)
-    }
-    if (nrow(dist$obis) == 0) {
-      dist$obis <- NULL
-    } else {
-      dist$obis <- st_set_crs(dist$obis, 4326)
-    }
-    dist$worms <- st_sf(st_sfc(), crs = 4326)
-    if (is.null(dist$envelope$envelope)) {
-      dist$envelope$envelope <- st_sf(st_sfc(), crs = 4326)
-    }
-    point <- st_sfc(st_point(c(decimalLongitude, decimalLatitude)), crs = 4326)
-    db <- bind_rows(dist$obis, dist$gbif)
-    if (nrow(db) > 0) {
-      d <- as.numeric(min(st_distance(point, db)))
-    } else {
-      d <- Inf
-    }
-    worms_intersect <- st_intersection(dist$worms, point)
-    envelope_intersect <- st_intersection(dist$envelope$envelope, point)
-    result <- list(distance = d, worms = as.logical(nrow(worms_intersect)), thermal = as.logical(nrow(envelope_intersect)))
-    st_qc$set(key, result)
+  if (!st$exists(aphiaid)) {
+    dist <- get_dist(aphiaid = as.numeric(aphiaid))
+    st$set(aphiaid, dist)
+  } else {
+    dist <- st$get(aphiaid)
   }
+  # TODO: cleanup below
+  if (nrow(dist$gbif) == 0) {
+    dist$gbif <- NULL
+  } else {
+    dist$gbif <- st_set_crs(dist$gbif, 4326)
+  }
+  if (nrow(dist$obis) == 0) {
+    dist$obis <- NULL
+  } else {
+    dist$obis <- st_set_crs(dist$obis, 4326)
+  }
+  if (is.null(dist$worms)) {
+    dist$worms <- st_sf(st_sfc(), crs = 4326)
+  } else {
+    dist$worms <- st_set_crs(dist$worms, 4326)
+  }
+  if (is.null(dist$envelope$envelope)) {
+    dist$envelope$envelope <- st_sf(st_sfc(), crs = 4326)
+  }
+  point <- st_sfc(st_point(c(decimalLongitude, decimalLatitude)), crs = 4326)
+  db <- bind_rows(dist$obis, dist$gbif)
+  if (nrow(db) > 0) {
+    d <- as.numeric(min(st_distance(point, db)))
+  } else {
+    d <- Inf
+  }
+  worms_intersect <- st_intersection(dist$worms, point)
+  envelope_intersect <- st_intersection(dist$envelope$envelope, point)
+  list(distance = d, worms = as.logical(nrow(worms_intersect)), thermal = as.logical(nrow(envelope_intersect)))
 }
 
 
 for (i in 1:nrow(detections)) {
-  check_occurrence(detections$aphiaid[i], detections$decimalLongitude[i], detections$decimalLatitude[i])
+  aphiaid <- detections$aphiaid[i]
+  decimalLongitude <- detections$decimalLongitude[i]
+  decimalLatitude <- detections$decimalLatitude[i]
+  key <- glue("{aphiaid}_{round(decimalLongitude, 3)}_{round(decimalLatitude, 3)}")
+  message(i, " ", key)
+  if (!st_qc$exists(key)) {
+    gc()
+    gc()
+    qc <- check_occurrence(aphiaid, decimalLongitude, decimalLatitude)
+    message(qc)
+    st_qc$set(key, qc)
+  }
 }
 
 
 
-
-
-
-
-# i <- 578
-# aphiaid <- detections$aphiaid[i]
-# decimalLongitude <- detections$decimalLongitude[i]
-# decimalLatitude <- detections$decimalLatitude[i]
-#
-# plot_dist(dist) +
-#   geom_sf(data = point, shape = 21, size = 2, color = "red", stroke = 2)
+i <- 174
+aphiaid <- detections$aphiaid[i]
+decimalLongitude <- detections$decimalLongitude[i]
+decimalLatitude <- detections$decimalLatitude[i]
+dist <- get_dist(aphiaid = as.numeric(aphiaid))
+point <- st_sfc(st_point(c(decimalLongitude, decimalLatitude)), crs = 4326)
+plot_dist(dist) +
+  geom_sf(data = point, shape = 21, size = 2, color = "red", stroke = 2)
 
 
 #######!!!!!!!!!!!!!!!!!
