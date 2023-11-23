@@ -20,16 +20,10 @@ st <- storr::storr_rds("storr")
 
 aphiaids <- unique(as.numeric(stringr::str_replace(occurrence$scientificNameID, "urn:lsid:marinespecies.org:taxname:", "")))
 
-x <- map(sample(aphiaids), function(aphiaid) {
+walk(aphiaids, function(aphiaid) {
   message(aphiaid)
   if (!st$exists(aphiaid)) {
     d <- get_dist(aphiaid = aphiaid)
     st$set(aphiaid, d)
   }
-  NULL
 }, .progress = TRUE)
-
-# check
-
-d <- st$get("216683")
-plot_dist(d)

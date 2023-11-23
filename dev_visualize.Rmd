@@ -98,7 +98,7 @@ detections <- detections %>%
     )
   ) %>%
   mutate(score = round(score, 2)) %>%
-  select(site = higherGeography, class, family, species, group, distance, worms, thermal, score) %>%
+  select(site = higherGeography, class, family, species, group, distance, worms, thermal, score, aphiaid) %>%
   arrange(site, species)
 
 rm("occurrence", "dna", "qc_list", "qc")
@@ -118,6 +118,8 @@ distant_formatter <- function() {
 } 
 
 ft <- detections %>%
+  mutate(species = glue("<a target=\"_blank\" href=\"https://www.marinespecies.org/aphia.php?p=taxdetails&id={aphiaid}\">{species}</a>")) %>%
+  select(-aphiaid) %>%
   formattable(
     align = rep("l", 6),
     list(
@@ -128,5 +130,5 @@ ft <- detections %>%
     )
   )
 ft %>%
-  as.datatable(escape = FALSE, filter = "none", options = list(pageLength = 500))
+  as.datatable(escape = FALSE, rownames = FALSE, filter = "none", options = list(pageLength = 500))
 ```
