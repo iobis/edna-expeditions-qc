@@ -101,5 +101,6 @@ detections %>%
       worms = icon_formatter(),
       thermal = icon_formatter()
     )
-  )
+  ) %>%
+  as.datatable(options = list(pageLength = 500))
 ```
