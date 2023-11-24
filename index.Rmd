@@ -9,7 +9,7 @@ knit: (function(inputFile, encoding) {
 
 <style type="text/css">
 .main-container {
-  max-width: 1200px !important;
+  max-width: 1400px !important;
   margin: auto;
 }
 </style>
@@ -55,6 +55,12 @@ occurrence <- map(occurrence_files, read.table, sep = "\t", quote = "", header =
   ) %>%
   left_join(dna, by = "occurrenceID")
 
+# extract vsearch result
+
+occurrence <- occurrence %>%
+  mutate(vsearch = str_replace(str_match(identificationRemarks, "VSEARCH.*;(.*).")[,2], "_", " ")) %>%
+  mutate(vsearch = ifelse(str_detect(paste0(phylum, class, order, family, genus, scientificName), vsearch), NA, vsearch))
+
 # add groups
 
 occurrence <- occurrence %>%
@@ -70,7 +76,7 @@ occurrence <- occurrence %>%
 
 detections <- occurrence %>%
   filter(!is.na(species) & !is.na(decimalLongitude)) %>%
-  group_by(higherGeography, decimalLongitude, decimalLatitude, species, class, family, group, aphiaid) %>%
+  group_by(higherGeography, decimalLongitude, decimalLatitude, species, class, family, group, aphiaid, vsearch) %>%
   summarize() %>%
   ungroup() %>%
   mutate(key = glue("{aphiaid}_{round(decimalLongitude, 3)}_{round(decimalLatitude, 3)}"))
@@ -99,7 +105,7 @@ detections <- detections %>%
     )
   ) %>%
   mutate(score = round(score, 2)) %>%
-  select(site = higherGeography, class, family, species, group, distance, worms, thermal, score, aphiaid) %>%
+  select(site = higherGeography, class, family, species, vsearch, group, distance, worms, thermal, score, aphiaid) %>%
   arrange(site, species)
 
 rm("occurrence", "dna", "qc_list", "qc")
@@ -118,6 +124,12 @@ distant_formatter <- function() {
   )	 	 
 } 
 
+vsearch_formatter <- function() {
+  formatter("span", 
+    style = ~ style(color = "#f57842")
+  )	 	 
+} 
+
 ft <- detections %>%
   mutate(species = glue("<a target=\"_blank\" href=\"https://www.marinespecies.org/aphia.php?p=taxdetails&id={aphiaid}\">{species}</a>")) %>%
   select(-aphiaid) %>%
@@ -127,7 +139,8 @@ ft <- detections %>%
       score = color_tile("#f57842", "#ffffff"),
       distance = distant_formatter(),
       worms = icon_formatter(),
-      thermal = icon_formatter()
+      thermal = icon_formatter(),
+      vsearch = vsearch_formatter()
     )
   )
 ft %>%
