@@ -91,8 +91,6 @@ for (i in 1:nrow(detections)) {
   }
 }
 
-
-
 # i <- 940
 # aphiaid <- detections$aphiaid[i]
 # decimalLongitude <- detections$decimalLongitude[i]
@@ -101,12 +99,3 @@ for (i in 1:nrow(detections)) {
 # point <- st_sfc(st_point(c(decimalLongitude, decimalLatitude)), crs = 4326)
 # plot_dist(dist) +
 #   geom_sf(data = point, shape = 21, size = 2, color = "red", stroke = 2)
-
-
-#######!!!!!!!!!!!!!!!!!
-  # fix unaccepted https://www.marinespecies.org/aphia.php?p=taxdetails&id=400783&from=rss
-# in resolve_taxonomy
-# add in data files / species lists as well?
-# also: list vsearch consensus
-
-
