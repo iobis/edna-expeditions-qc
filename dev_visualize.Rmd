@@ -75,8 +75,9 @@ detections <- occurrence %>%
   ungroup() %>%
   mutate(key = glue("{aphiaid}_{round(decimalLongitude, 3)}_{round(decimalLatitude, 3)}"))
 
-qc_list <- st_qc$mget(detections$key)
-names(qc_list) <- detections$key
+unique_keys <- unique(detections$key)
+qc_list <- st_qc$mget(unique_keys)
+names(qc_list) <- unique_keys
 qc <- bind_rows(qc_list, .id = "key")
 
 detections <- detections %>%

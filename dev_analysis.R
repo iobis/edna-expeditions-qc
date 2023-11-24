@@ -36,12 +36,17 @@ detections <- occurrence %>%
   ungroup()
 
 check_occurrence <- function(aphiaid, decimalLongitude, decimalLatitude) {
+  st <- storr::storr_rds("storr")
   if (!st$exists(aphiaid)) {
     dist <- get_dist(aphiaid = as.numeric(aphiaid))
     st$set(aphiaid, dist)
   } else {
     dist <- st$get(aphiaid)
   }
+  rm("st")
+  gc()
+  gc()
+
   # TODO: cleanup below
   if (nrow(dist$gbif) == 0) {
     dist$gbif <- NULL
@@ -80,8 +85,6 @@ for (i in 1:nrow(detections)) {
   key <- glue("{aphiaid}_{round(decimalLongitude, 3)}_{round(decimalLatitude, 3)}")
   message(i, " ", key)
   if (!st_qc$exists(key)) {
-    gc()
-    gc()
     qc <- check_occurrence(aphiaid, decimalLongitude, decimalLatitude)
     message(qc)
     st_qc$set(key, qc)
@@ -90,7 +93,7 @@ for (i in 1:nrow(detections)) {
 
 
 
-# i <- 174
+# i <- 940
 # aphiaid <- detections$aphiaid[i]
 # decimalLongitude <- detections$decimalLongitude[i]
 # decimalLatitude <- detections$decimalLatitude[i]
