@@ -12,9 +12,12 @@ knit: (function(inputFile, encoding) {
   max-width: 1400px !important;
   margin: auto;
 }
+p {
+  margin: 30px 0px;
+}
 </style>
 
-The table below shows the likelihood score of eDNA detections based on WoRMS distributions, species thermal envelopes, and distance to known observations in OBIS and GBIF.
+The table below shows the likelihood score of eDNA detections based on WoRMS distributions, species thermal envelopes built from OBIS and GBIF data, and distance to known observations in OBIS and GBIF. Identifications are done using RDP classifier, but conflicting identifications from VSEARCH are shown as well. The original data are available from <https://github.com/iobis/edna-results/tree/data/data>.
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE}
 library(dplyr)
@@ -132,6 +135,7 @@ vsearch_formatter <- function() {
 
 ft <- detections %>%
   mutate(species = glue("<a target=\"_blank\" href=\"https://www.marinespecies.org/aphia.php?p=taxdetails&id={aphiaid}\">{species}</a>")) %>%
+  mutate(vsearch = ifelse(is.na(vsearch), vsearch, glue("<a target=\"_blank\" href=\" https://www.marinespecies.org/aphia.php?p=taxlist&tName={vsearch}\">{vsearch}</a>"))) %>%
   select(-aphiaid) %>%
   formattable(
     align = rep("l", 6),
@@ -139,8 +143,7 @@ ft <- detections %>%
       score = color_tile("#f57842", "#ffffff"),
       distance = distant_formatter(),
       worms = icon_formatter(),
-      thermal = icon_formatter(),
-      vsearch = vsearch_formatter()
+      thermal = icon_formatter()
     )
   )
 ft %>%
