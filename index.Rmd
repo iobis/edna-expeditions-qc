@@ -111,7 +111,7 @@ detections <- detections %>%
   select(site = higherGeography, class, family, species, vsearch, group, distance, worms, thermal, score, aphiaid) %>%
   arrange(site, species)
 
-rm("occurrence", "dna", "qc_list", "qc")
+# rm("occurrence", "dna", "qc_list", "qc")
 ```
 
 ```{r, message=FALSE, warning=FALSE, echo=FALSE}
