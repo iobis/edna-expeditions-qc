@@ -5,5 +5,6 @@ https://iobis.github.io/edna-qc/
 ## Download data
 
 ```
-git clone --branch data git@github.com:iobis/edna-results.git
+rm -r edna-results
+git clone --branch data --depth 1 git@github.com:iobis/edna-results.git
 ```

@@ -39,7 +39,7 @@ coord_round <- 3
 options(knitr.kable.NA = "")
 ```
 
-```{r, message=FALSE, warning=FALSE, cache=TRUE, echo=FALSE}
+```{r, message=FALSE, warning=FALSE, echo=FALSE}
 # read eDNA results
 
 dna_files <- list.files("edna-results/data", "*DNADerivedData*", full.names = TRUE)
