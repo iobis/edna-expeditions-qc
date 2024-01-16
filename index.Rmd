@@ -61,7 +61,7 @@ occurrence <- map(occurrence_files, read.table, sep = "\t", quote = "", header =
 # extract vsearch result
 
 occurrence <- occurrence %>%
-  mutate(vsearch = str_replace(str_match(identificationRemarks, "VSEARCH.*;(.*).")[,2], "_", " ")) %>%
+  mutate(vsearch = str_replace(str_replace(str_replace(str_match(identificationRemarks, "VSEARCH.*;(.*).")[,2], "_", " "), "\\(", "\\\\("), "\\)", "\\\\)")) %>%
   mutate(vsearch = ifelse(str_detect(paste0(phylum, class, order, family, genus, scientificName), vsearch), NA, vsearch))
 
 # add groups
