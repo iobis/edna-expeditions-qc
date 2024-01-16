@@ -7,3 +7,5 @@ memoise*
 *.Rproj
 edna-results
 .Rproj.user
+output
+output.zip

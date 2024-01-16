@@ -42,8 +42,8 @@ options(knitr.kable.NA = "")
 ```{r, message=FALSE, warning=FALSE, echo=FALSE}
 # read eDNA results
 
-dna_files <- list.files("edna-results/data", "*DNADerivedData*", full.names = TRUE)
-occurrence_files <- list.files("edna-results/data", "*Occurrence*", full.names = TRUE)
+dna_files <- list.files("output", "*DNADerivedData*", full.names = TRUE)
+occurrence_files <- list.files("output", "*Occurrence*", full.names = TRUE)
 
 dna <- map(dna_files, read.table, sep = "\t", quote = "", header = TRUE) %>%
   bind_rows() %>%
