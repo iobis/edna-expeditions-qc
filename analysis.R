@@ -90,12 +90,3 @@ for (i in 1:nrow(detections)) {
     st_qc$set(key, qc)
   }
 }
-
-# i <- 940
-# aphiaid <- detections$aphiaid[i]
-# decimalLongitude <- detections$decimalLongitude[i]
-# decimalLatitude <- detections$decimalLatitude[i]
-# dist <- get_dist(aphiaid = as.numeric(aphiaid))
-# point <- st_sfc(st_point(c(decimalLongitude, decimalLatitude)), crs = 4326)
-# plot_dist(dist) +
-#   geom_sf(data = point, shape = 21, size = 2, color = "red", stroke = 2)
