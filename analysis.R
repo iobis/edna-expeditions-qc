@@ -36,6 +36,7 @@ detections <- occurrence %>%
   ungroup()
 
 check_occurrence <- function(aphiaid, decimalLongitude, decimalLatitude) {
+  message(glue("{aphiaid}, {decimalLongitude}, {decimalLatitude}"))
   st <- storr::storr_rds("storr")
   if (!st$exists(aphiaid)) {
     dist <- get_dist(aphiaid = as.numeric(aphiaid))
@@ -77,6 +78,8 @@ check_occurrence <- function(aphiaid, decimalLongitude, decimalLatitude) {
   envelope_intersect <- st_intersection(dist$envelope$envelope, point)
   list(distance = d, worms = as.logical(nrow(worms_intersect)), thermal = as.logical(nrow(envelope_intersect)))
 }
+
+options(timeout = 1000)
 
 for (i in 1:nrow(detections)) {
   aphiaid <- detections$aphiaid[i]
