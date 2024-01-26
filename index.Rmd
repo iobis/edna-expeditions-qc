@@ -9,7 +9,7 @@ knit: (function(inputFile, encoding) {
 
 <style type="text/css">
 .main-container {
-  max-width: 1400px !important;
+  max-width: 1800px !important;
   margin: auto;
 }
 p {
@@ -79,8 +79,15 @@ occurrence <- occurrence %>%
 
 detections <- occurrence %>%
   filter(!is.na(species) & !is.na(decimalLongitude)) %>%
-  group_by(higherGeography, decimalLongitude, decimalLatitude, species, class, family, group, aphiaid, vsearch) %>%
-  summarize(batch = paste0("b", str_replace_all(paste0(unique(sort(eventRemarks)), collapse = ","), "sequencing batch ", ""))) %>%
+  group_by(higherGeography, species, class, family, group, aphiaid) %>%
+  summarize(
+    batch = paste0("b", str_replace_all(paste0(unique(sort(eventRemarks)), collapse = ","), "sequencing batch ", "")),
+    occurrenceID = paste0(head(occurrenceID, 2), collapse = ", "),
+    reads = sum(organismQuantity, na.rm = TRUE),
+    decimalLongitude = first(decimalLongitude),
+    decimalLatitude = first(decimalLatitude),
+    vsearch = paste0(head(unique(na.omit(vsearch)), 2), collapse = ", ")
+  ) %>%
   ungroup() %>%
   mutate(key = glue("{aphiaid}_{round(decimalLongitude, 3)}_{round(decimalLatitude, 3)}"))
 
@@ -93,8 +100,6 @@ detections <- detections %>%
   left_join(qc, by = "key")
 
 detections <- detections %>%
-  group_by(higherGeography, species) %>%
-  filter(row_number() == 1) %>%
   rowwise() %>%
   mutate(distance = round(distance / 1000)) %>% 
   mutate(across(where(is.character), ~replace_na(.,""))) %>%
@@ -108,7 +113,7 @@ detections <- detections %>%
     )
   ) %>%
   mutate(score = round(score, 2)) %>%
-  select(site = higherGeography, batch, class, family, species, vsearch, group, distance, worms, thermal, score, aphiaid) %>%
+  select(site = higherGeography, batch, class, family, species, vsearch, group, distance, worms, thermal, score, aphiaid, reads, occurrenceID) %>%
   arrange(site, species)
 
 # rm("occurrence", "dna", "qc_list", "qc")
